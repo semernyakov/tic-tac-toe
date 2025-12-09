@@ -8,9 +8,7 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState('playing');
   const [promoCode, setPromoCode] = useState('');
   const [showModal, setShowModal] = useState(false);
-  // const API_URL = 'http://localhost:8000';
-  const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN';
-  const TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   // флаг включения подсказки для игрока (X)
   const [highlightWin, setHighlightWin] = useState(true);
 
@@ -39,18 +37,18 @@ export default function App() {
 
   const generatePromoCode = () => Math.floor(10000 + Math.random() * 90000).toString();
 
-  const sendTelegramMessage = async (message) => {
+  const sendGameResult = async (result, promoCode = null) => {
     try {
-      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      const response = await fetch(`${API_URL}/api/game-result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
+        body: JSON.stringify({ result, promo_code: promoCode }),
       });
       if (!response.ok) {
-        console.log('Telegram message simulation:', message);
+        console.log('Failed to send game result');
       }
     } catch (error) {
-      console.log('Telegram message simulation:', message);
+      console.log('Error sending game result:', error);
     }
   };
 
@@ -163,10 +161,11 @@ export default function App() {
     if (winner) {
       setGameStatus(isPlayerTurn ? 'win' : 'lose');
       setShowModal(true);
-      sendTelegramMessage(`Игрок ${isPlayerTurn ? 'X' : 'O'} ${isPlayerTurn ? 'выиграл' : 'проиграл'}! Код: ${promoCode}`);
+      sendGameResult(isPlayerTurn ? 'win' : 'lose', promoCode);
     } else if (isBoardFull(newBoard)) {
       setGameStatus('draw');
       setShowModal(true);
+      sendGameResult('draw');
     } else {
       setIsPlayerTurn(!isPlayerTurn);
     }
@@ -200,11 +199,11 @@ export default function App() {
       if (winner) {
         setGameStatus(winner === 'X' ? 'win' : 'lose');
         setShowModal(true);
-        sendTelegramMessage(`Игрок ${winner} ${winner === 'X' ? 'выиграл' : 'проиграл'}!`);
+        sendGameResult(winner === 'X' ? 'win' : 'lose');
       } else if (isBoardFull(newBoard)) {
         setGameStatus('draw');
         setShowModal(true);
-        sendTelegramMessage('Ничья');
+        sendGameResult('draw');
       }
     }, 250);
     return () => clearTimeout(t);
@@ -298,7 +297,7 @@ export default function App() {
                 {gameStatus === 'win' && (
                   <>
                     <p className="text-purple-700 text-sm mb-2">Вы выиграли этот раунд!</p>
-                    <p className="text-purple-500 text-xs">Код для телеграм-бота:</p>
+                    <p className="text-purple-500 text-xs">Код отправлен в телеграм-бот <a href="https://t.me/TicTocToeBot" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">@TicTocToeBot</a>:</p>
                     <p className="text-lg font-bold">{promoCode}</p>
                   </>
                 )}
