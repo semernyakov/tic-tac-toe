@@ -263,46 +263,150 @@ xl: 1280px  /* Большие экраны */
 
 ## 🚀 Деплой
 
-### Vercel (рекомендуется)
+### Vercel (Бесплатно, рекомендуется)
 
-1. Подключите GitHub репозиторий
-2. Vercel автоматически определит Vite
-3. Настройте переменные окружения:
-   - `VITE_API_URL` - URL вашего backend
+**Пошаговая инструкция:**
 
-### Netlify
+1. **Создайте аккаунт** на [vercel.com](https://vercel.com)
+2. **Импортируйте ваш GitHub репозиторий**
+3. **Vercel автоматически определит Vite** и React приложение
+4. **Настройте переменные окружения:**
+   - Перейдите в Settings → Environment Variables
+   - Добавьте: `VITE_API_URL=https://tic-tac-toe-production-2050.up.railway.app`
+5. **Деплой произойдет автоматически**
 
-1. Создайте новый сайт
-2. Подключите репозиторий
-3. Настройте build команду: `npm run build`
-4. Установите публичную папку: `dist`
+**Пример рабочего frontend:** [https://tic-tac-toe-lime-beta.vercel.app/](https://tic-tac-toe-lime-beta.vercel.app/)
+
+**Проверка деплоя:**
+- Откройте URL вашего Vercel проекта
+- Игра должна загрузиться без ошибок
+- Проверьте Network tab в DevTools - API запросы должны идти на правильный backend
+
+### Netlify (Альтернатива)
+
+1. **Создайте новый сайт** на [netlify.com](https://netlify.com)
+2. **Подключите репозиторий** с frontend кодом
+3. **Настройте конфигурацию:**
+   - **Build command:** `npm run build`
+   - **Publish directory:** `dist`
+   - **Node version:** 18 или выше
+4. **Добавьте переменные окружения:**
+   - `VITE_API_URL=https://ваш-railway-url.up.railway.app`
+5. **Деплой** начнется автоматически
+
+### Render.com (Полная альтернатива)
+
+Для тех, кто предпочитает один сервис для всего:
+
+1. **Создайте Static Site** на [render.com](https://render.com)
+2. **Подключите репозиторий** (только папка frontend)
+3. **Настройте конфигурацию:**
+   - **Build Command:** `cd frontend && npm install && npm run build`
+   - **Publish Directory:** `frontend/dist`
+4. **Добавьте переменные окружения:**
+   - `VITE_API_URL=https://ваш-backend-url.com`
 
 ### Ручной деплой
 
 ```bash
-# Сборка
+# 1. Сборка приложения
 npm run build
 
-# Загрузка папки dist на ваш сервер
-# dist/ - готовая сборка для продакшена
+# 2. Результат сборки находится в папке dist/
+# 3. Загрузите содержимое папки dist/ на ваш веб-сервер
+
+# Структура dist/:
+# ├── index.html
+# ├── assets/
+# │   ├── index-[hash].js
+# │   └── index-[hash].css
+# └── ...
 ```
 
-### Docker
+### Переменные окружения в production
+
+**Vercel/Netlify Dashboard:**
+```
+VITE_API_URL=https://tic-tac-toe-production-2050.up.railway.app
+```
+
+**Локальная сборка для production:**
+```bash
+# Создайте .env.production файл
+echo "VITE_API_URL=https://tic-tac-toe-production-2050.up.railway.app" > .env.production
+
+# Соберите с production переменными
+npm run build
+```
+
+### Автоматический деплой
+
+При каждом push в главную ветку GitHub:
+
+- 🚄 **Vercel** автоматически пересоберет и задеплоит frontend
+- 🌐 **Netlify** автоматически пересоберет и задеплоит frontend
+- ⚡ **Время деплоя:** ~2-3 минуты
+
+### Docker для production
 
 ```dockerfile
-FROM node:18-alpine as build
+# Multi-stage build для оптимизации размера
+FROM node:18-alpine as builder
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
 
+# Копируем package файлы
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Копируем исходный код
 COPY . .
+
+# Сборка приложения
 RUN npm run build
 
+# Production stage
 FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+
+# Копируем собранное приложение
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Копируем nginx конфигурацию
+COPY nginx.conf /etc/nginx/nginx.conf
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
+```
+
+**nginx.conf:**
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    server {
+        listen 80;
+        server_name localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # SPA routing
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Cache static assets
+        location /assets/ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+}
 ```
 
 ## 🐛 Решение проблем
