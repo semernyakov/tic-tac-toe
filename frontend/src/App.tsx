@@ -8,7 +8,7 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState('playing');
   const [promoCode, setPromoCode] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, '') : 'http://localhost:8000';
   // флаг включения подсказки для игрока (X)
   const [highlightWin, setHighlightWin] = useState(true);
 
