@@ -5,7 +5,6 @@ from pydantic import BaseModel
 import httpx
 import random
 from typing import Optional
-import os
 
 from config import TELEGRAM_CHAT_ID, TELEGRAM_BOT_TOKEN
 
