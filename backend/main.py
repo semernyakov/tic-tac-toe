@@ -6,10 +6,8 @@ import httpx
 import random
 from typing import Optional
 import os
-from dotenv import load_dotenv
 
-# Загружаем .env
-load_dotenv()
+from config import TELEGRAM_CHAT_ID, TELEGRAM_BOT_TOKEN
 
 app = FastAPI(title="Tic-Tac-Toe API")
 
@@ -21,10 +19,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Получаем конфигурацию
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 # Отладочная информация
 print("=" * 50)
