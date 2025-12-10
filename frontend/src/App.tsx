@@ -8,7 +8,9 @@ export default function App() {
   const [gameStatus, setGameStatus] = useState('playing');
   const [promoCode, setPromoCode] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, '') : 'http://localhost:8000';
+  const API_URL = (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim())
+    ? import.meta.env.VITE_API_URL.trim().replace(/\/+$/, '')
+    : 'https://tic-tac-toe-production-2050.up.railway.app';
   // флаг включения подсказки для игрока (X)
   const [highlightWin, setHighlightWin] = useState(true);
 
